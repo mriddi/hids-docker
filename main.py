@@ -28,6 +28,9 @@ import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import MinMaxScaler
 
+from keras.utils import to_categorical
+
+
 
 WINDOW_SIZE = 0
 N_NEIGHBORS = 3
@@ -134,10 +137,10 @@ def naive_bayes(base_normal, base_exec):
     features = base_normal + base_exec
 
     for i in range(RUNS):
-        X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
+        x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
 
         gnb = GaussianNB()
-        gnb.fit(X_train, y_train)
+        gnb.fit(x_train, y_train)
         y_pred = gnb.predict(X_test)
 
         score = (precision_score(y_test, y_pred, average="binary"), recall_score(y_test, y_pred, average="binary"), f1_score(y_test, y_pred, average="binary"), accuracy_score(y_test, y_pred))
@@ -167,10 +170,10 @@ def kneighbors(base_normal, base_exec):
     features = base_normal + base_exec
 
     for i in range(RUNS):
-        X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
+        x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
 
         knn = KNeighborsClassifier(n_neighbors=N_NEIGHBORS, n_jobs=-1)
-        knn.fit(X_train, y_train)
+        knn.fit(x_train, y_train)
         y_pred = knn.predict(X_test)
 
         score = (precision_score(y_test, y_pred, average="binary"), recall_score(y_test, y_pred, average="binary"), f1_score(y_test, y_pred, average="binary"), accuracy_score(y_test, y_pred))
@@ -198,11 +201,11 @@ def random_forest(base_normal, base_exec):
     features = base_normal + base_exec
 
     for i in range(RUNS):
-        X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
+        x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
 
         rfc = RandomForestClassifier(n_estimators=100, n_jobs=-1)
 
-        rfc.fit(X_train, y_train)
+        rfc.fit(x_train, y_train)
         y_pred = rfc.predict(X_test)
 
         score = (precision_score(y_test, y_pred, average="binary"), recall_score(y_test, y_pred, average="binary"), f1_score(y_test, y_pred, average="binary"), accuracy_score(y_test, y_pred))
@@ -229,10 +232,10 @@ def ada_boost(base_normal, base_exec):
     features = base_normal + base_exec
 
     for i in range(RUNS):
-        X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
+        x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
 
         abc = AdaBoostClassifier(base_estimator=RandomForestClassifier(n_jobs=-1))
-        abc.fit(X_train, y_train)
+        abc.fit(x_train, y_train)
         y_pred = abc.predict(X_test)
 
         score = (precision_score(y_test, y_pred, average="binary"), recall_score(y_test, y_pred, average="binary"), f1_score(y_test, y_pred, average="binary"), accuracy_score(y_test, y_pred))
@@ -259,10 +262,10 @@ def multilayer_perceptron(base_normal, base_exec):
     features = base_normal + base_exec
 
     for i in range(RUNS):
-        X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
+        x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
 
         mlp = MLPClassifier()
-        mlp.fit(X_train, y_train)
+        mlp.fit(x_train, y_train)
         y_pred = mlp.predict(X_test)
 
         score = (precision_score(y_test, y_pred, average="binary"), recall_score(y_test, y_pred, average="binary"), f1_score(y_test, y_pred, average="binary"), accuracy_score(y_test, y_pred))
@@ -285,11 +288,11 @@ def multilayer_perceptron(base_normal, base_exec):
 #     print("\n[...] Retrieving datasets and labels")
 #     features,labels = get_features_labels()
 #
-#     X_train,X_test,y_train,y_test = train_test_split(features, labels, test_size=0.5, random_state=42)
+#     x_train,X_test,y_train,y_test = train_test_split(features, labels, test_size=0.5, random_state=42)
 #
 #     lsvc = SVC()
 #
-#     lsvc.fit(X_train, y_train)
+#     lsvc.fit(x_train, y_train)
 #     y_pred = lsvc.predict(X_test)
 #
 #     print("\nf1_score: ", f1_score(y_test, y_pred, average="binary"))
@@ -309,11 +312,11 @@ def one_class_svm(base_normal, base_exec):
     features = base_normal + base_exec
 
     for i in range(RUNS):
-        X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
+        x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
 
         onesvm = OneClassSVM(gamma="scale", nu=0.01)
         trainX = []
-        for x, y in zip(X_train, y_train):
+        for x, y in zip(x_train, y_train):
             if (y == 1):
                 trainX.append(x)
 
@@ -345,11 +348,11 @@ def isolation_forest(base_normal, base_exec):
     features = base_normal + base_exec
 
     for i in range(RUNS):
-        X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
+        x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2**i)
 
         clf = IsolationForest(n_jobs=-1)
         trainX = []
-        for x, y in zip(X_train, y_train):
+        for x, y in zip(x_train, y_train):
             if (y == 1):
                 trainX.append(x)
 
@@ -379,47 +382,60 @@ def sliding_window_transform(data, window_size):
     return np.array(X), np.array(y)
 
 
+def value_to_categorical(value, allowed_values):
+    index = allowed_values.index(value)
+    categorical = to_categorical(index, num_classes=len(allowed_values))
+    return categorical
+
+
 def lstm(base_normal, base_exec):
 
     num_samples = 9
-    vector_size = 1
 
-    data = np.random.randint(0, 10, size=(num_samples, vector_size))
+    allowed_values = [2, 4, 6, 8, 10]
+    data = np.random.choice(allowed_values, num_samples)
 
     np.set_printoptions(threshold=np.inf)
+    print("data")
     print(data)
-    print("---")
-    # plt.plot(data)
-    # plt.show()
+    
 
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    data = scaler.fit_transform(data)
-    print(data)
+    data_one_hot = to_categorical(data)
+    print("data_one_hot")
+    print(data_one_hot)
 
-    X_train, y_train = sliding_window_transform(data, WINDOW_SIZE)
+    x_train, y_train = sliding_window_transform(data_one_hot, WINDOW_SIZE)
 
-    # print(X_train)
-    # print("---")
-    # print(y_train)
+    print("x_train")
+    print(x_train)
+    print(y_train)
 
     model = Sequential()
-    model.add(LSTM(50, input_shape=(WINDOW_SIZE, vector_size), return_sequences=True))
+    model.add(LSTM(50, input_shape=(WINDOW_SIZE, 11), return_sequences=True))
     model.add(LSTM(50))
-    model.add(Dense(vector_size))
-    model.compile(optimizer='adam', loss='mse')
+    model.add(Dense(11, activation='softmax'))
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
-    model.fit(X_train, y_train, epochs=10, batch_size=64, validation_split=0.2)
+    model.fit(x_train, y_train, epochs=10, batch_size=64, validation_split=0.2)
 
-    trainPredict = model.predict(X_train)
-    trainPredict = scaler.inverse_transform(trainPredict)
+    val = value_to_categorical(2, allowed_values)
+    print("val")
+    print(val)
+    trainPredict = model.predict(val)
+    # trainPredict = model.predict(x_train)
 
-    trainPredictPlot = np.empty_like(data)
-    trainPredictPlot[:, :] = np.nan
-    trainPredictPlot[WINDOW_SIZE:len(trainPredict)+WINDOW_SIZE, :] = trainPredict
+    # predicted_indices = np.argmax(trainPredict, axis=1)
+    # print(predicted_indices)
+    # predicted_values = [allowed_values[index] for index in predicted_indices]
+    # print(predicted_values[:10])
 
-    plt.plot(scaler.inverse_transform(data))
-    plt.plot(trainPredictPlot)
-    plt.show()
+    # trainPredictPlot = np.empty_like(data)
+    # trainPredictPlot[:, :] = np.nan
+    # trainPredictPlot[WINDOW_SIZE:len(trainPredict)+WINDOW_SIZE, :] = trainPredict
+
+    # plt.plot(data)
+    # plt.plot(trainPredictPlot)
+    # plt.show()
 
     return
 
