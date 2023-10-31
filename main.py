@@ -21,6 +21,14 @@ import numpy as np
 import argparse
 import os
 
+from keras.models import Sequential
+from keras.layers import LSTM, Dense
+
+import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import MinMaxScaler
+
+
 WINDOW_SIZE = 0
 N_NEIGHBORS = 3
 
@@ -362,6 +370,59 @@ def isolation_forest(base_normal, base_exec):
     return
 
 
+# Function to convert data into a format suitable for LSTM training with sliding windows
+def sliding_window_transform(data, window_size):
+    X, y = [], []
+    for i in range(len(data) - window_size):
+        X.append(data[i:i+window_size])
+        y.append(data[i+window_size])
+    return np.array(X), np.array(y)
+
+
+def lstm(base_normal, base_exec):
+
+    num_samples = 9
+    vector_size = 1
+
+    data = np.random.randint(0, 10, size=(num_samples, vector_size))
+
+    np.set_printoptions(threshold=np.inf)
+    print(data)
+    print("---")
+    # plt.plot(data)
+    # plt.show()
+
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    data = scaler.fit_transform(data)
+    print(data)
+
+    X_train, y_train = sliding_window_transform(data, WINDOW_SIZE)
+
+    # print(X_train)
+    # print("---")
+    # print(y_train)
+
+    model = Sequential()
+    model.add(LSTM(50, input_shape=(WINDOW_SIZE, vector_size), return_sequences=True))
+    model.add(LSTM(50))
+    model.add(Dense(vector_size))
+    model.compile(optimizer='adam', loss='mse')
+    model.summary()
+    model.fit(X_train, y_train, epochs=10, batch_size=64, validation_split=0.2)
+
+    trainPredict = model.predict(X_train)
+    trainPredict = scaler.inverse_transform(trainPredict)
+
+    trainPredictPlot = np.empty_like(data)
+    trainPredictPlot[:, :] = np.nan
+    trainPredictPlot[WINDOW_SIZE:len(trainPredict)+WINDOW_SIZE, :] = trainPredict
+
+    plt.plot(scaler.inverse_transform(data))
+    plt.plot(trainPredictPlot)
+    plt.show()
+
+    return
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -379,11 +440,13 @@ if __name__ == "__main__":
 
     base_normal, base_exec = get_features(args.dataset, args.filter)
 
-    naive_bayes(base_normal, base_exec)
-    kneighbors(base_normal, base_exec)
-    random_forest(base_normal, base_exec)
-    multilayer_perceptron(base_normal, base_exec)
-    ada_boost(base_normal, base_exec)
+    lstm(base_normal, base_exec)
 
-    one_class_svm(base_normal, base_exec)
-    isolation_forest(base_normal, base_exec)
+    # naive_bayes(base_normal, base_exec)
+    # kneighbors(base_normal, base_exec)
+    # random_forest(base_normal, base_exec)
+    # multilayer_perceptron(base_normal, base_exec)
+    # ada_boost(base_normal, base_exec)
+
+    # one_class_svm(base_normal, base_exec)
+    # isolation_forest(base_normal, base_exec)
