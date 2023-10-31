@@ -30,7 +30,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 from keras.utils import to_categorical
 
+from keras.layers import LSTM, Dense, Embedding
 
+from keras.datasets import imdb
 
 WINDOW_SIZE = 0
 N_NEIGHBORS = 3
@@ -373,69 +375,49 @@ def isolation_forest(base_normal, base_exec):
     return
 
 
-# Function to convert data into a format suitable for LSTM training with sliding windows
-def sliding_window_transform(data, window_size):
-    X, y = [], []
-    for i in range(len(data) - window_size):
-        X.append(data[i:i+window_size])
-        y.append(data[i+window_size])
-    return np.array(X), np.array(y)
-
-
-def value_to_categorical(value, allowed_values):
-    index = allowed_values.index(value)
-    categorical = to_categorical(index, num_classes=len(allowed_values))
-    return categorical
+def sliding_window(sequence, window_size):
+    i = 0
+    windows = []
+    while i + window_size <= len(sequence):
+        windows.append(sequence[i:i+window_size])
+        i += 1
+    return np.array(windows)
 
 
 def lstm(base_normal, base_exec):
+    WINDOW_SIZE = 10
+    VOCAB_SIZE = 100
 
-    num_samples = 9
+    normal_sequence = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    abnormal_sequence = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
 
-    allowed_values = [2, 4, 6, 8, 10]
-    data = np.random.choice(allowed_values, num_samples)
+    X_normal = sliding_window(normal_sequence, WINDOW_SIZE)
+    X_abnormal = sliding_window(abnormal_sequence, WINDOW_SIZE)
 
-    np.set_printoptions(threshold=np.inf)
-    print("data")
-    print(data)
-    
+    X_train = np.vstack((X_normal, X_abnormal))
+    y_train = np.array([0] * len(X_normal) + [1] * len(X_abnormal))
 
-    data_one_hot = to_categorical(data)
-    print("data_one_hot")
-    print(data_one_hot)
-
-    x_train, y_train = sliding_window_transform(data_one_hot, WINDOW_SIZE)
-
-    print("x_train")
-    print(x_train)
-    print(y_train)
 
     model = Sequential()
-    model.add(LSTM(50, input_shape=(WINDOW_SIZE, 11), return_sequences=True))
-    model.add(LSTM(50))
-    model.add(Dense(11, activation='softmax'))
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.add(Embedding(input_dim=VOCAB_SIZE, output_dim=32, input_length=WINDOW_SIZE))
+    model.add(LSTM(100))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
-    model.fit(x_train, y_train, epochs=10, batch_size=64, validation_split=0.2)
+    model.fit(X_train, y_train, epochs=3, batch_size=64, verbose=1)
 
-    val = value_to_categorical(2, allowed_values)
-    print("val")
-    print(val)
-    trainPredict = model.predict(val)
-    # trainPredict = model.predict(x_train)
+    new_sequence = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    X_new = sliding_window(new_sequence, WINDOW_SIZE)
 
-    # predicted_indices = np.argmax(trainPredict, axis=1)
-    # print(predicted_indices)
-    # predicted_values = [allowed_values[index] for index in predicted_indices]
-    # print(predicted_values[:10])
+    predictions = model.predict(X_new)
 
-    # trainPredictPlot = np.empty_like(data)
-    # trainPredictPlot[:, :] = np.nan
-    # trainPredictPlot[WINDOW_SIZE:len(trainPredict)+WINDOW_SIZE, :] = trainPredict
 
-    # plt.plot(data)
-    # plt.plot(trainPredictPlot)
-    # plt.show()
+    avg_prediction = np.mean(predictions)
+
+    if avg_prediction < 0.5:
+        print("The sequence is normal.")
+    else:
+        print("The sequence is abnormal.")
 
     return
 
