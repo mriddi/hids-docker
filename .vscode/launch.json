@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
-            "args": ["-f", "raw", "1"],
+            "args": ["-f", "raw", "100"],
             "console": "integratedTerminal",
             "justMyCode": true
         }

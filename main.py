@@ -375,42 +375,32 @@ def isolation_forest(base_normal, base_exec):
     return
 
 
-def sliding_window(sequence, window_size):
-    i = 0
-    windows = []
-    while i + window_size <= len(sequence):
-        windows.append(sequence[i:i+window_size])
-        i += 1
-    return np.array(windows)
+# def sliding_window(sequence, window_size):
+#     i = 0
+#     windows = []
+#     while i + window_size <= len(sequence):
+#         windows.append(sequence[i:i+window_size])
+#         i += 1
+#     return np.array(windows)
 
 
 def lstm(base_normal, base_exec):
-    WINDOW_SIZE = 10
-    VOCAB_SIZE = 100
-
-    normal_sequence = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    abnormal_sequence = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
-
-    X_normal = sliding_window(normal_sequence, WINDOW_SIZE)
-    X_abnormal = sliding_window(abnormal_sequence, WINDOW_SIZE)
-
-    X_train = np.vstack((X_normal, X_abnormal))
-    y_train = np.array([0] * len(X_normal) + [1] * len(X_abnormal))
-
+    print("\n> LSTM")
+    print("[...] Retrieving datasets and labels")
+    labels = define_labels(base_normal, base_exec, False)
+    features = base_normal + base_exec
+    x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2)
+    VOCAB_SIZE =  max(max(t) for t in features) + 1
 
     model = Sequential()
-    model.add(Embedding(input_dim=VOCAB_SIZE, output_dim=32, input_length=WINDOW_SIZE))
-    model.add(LSTM(100))
+    model.add(Embedding(input_dim=VOCAB_SIZE, output_dim=8, input_length=WINDOW_SIZE))
+    model.add(LSTM(50))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
-    model.fit(X_train, y_train, epochs=3, batch_size=64, verbose=1)
+    model.fit(x_train, y_train, epochs=2, batch_size=32, verbose=2)
 
-    new_sequence = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    X_new = sliding_window(new_sequence, WINDOW_SIZE)
-
-    predictions = model.predict(X_new)
-
+    predictions = model.predict(X_test)
 
     avg_prediction = np.mean(predictions)
 
@@ -418,6 +408,18 @@ def lstm(base_normal, base_exec):
         print("The sequence is normal.")
     else:
         print("The sequence is abnormal.")
+
+    predicted_labels = (predictions > 0.5).astype(int)
+
+    precision = precision_score(y_test, predicted_labels, average='micro')
+    recall = recall_score(y_test, predicted_labels, average='micro')
+    f1 = f1_score(y_test, predicted_labels, average='micro')
+    accuracy = accuracy_score(y_test, predicted_labels)
+
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1 Score: {f1:.4f}")
+    print(f"Accuracy: {accuracy:.4f}")
 
     return
 
@@ -438,9 +440,8 @@ if __name__ == "__main__":
 
     base_normal, base_exec = get_features(args.dataset, args.filter)
 
-    lstm(base_normal, base_exec)
-
-    # naive_bayes(base_normal, base_exec)
+    # lstm(base_normal, base_exec)
+    naive_bayes(base_normal, base_exec)
     # kneighbors(base_normal, base_exec)
     # random_forest(base_normal, base_exec)
     # multilayer_perceptron(base_normal, base_exec)
