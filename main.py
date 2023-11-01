@@ -22,19 +22,9 @@ import argparse
 import os
 
 from keras.models import Sequential
-from keras.layers import LSTM, Dense
-
-import matplotlib.pyplot as plt
-
-from sklearn.preprocessing import MinMaxScaler
-
-from keras.utils import to_categorical
-
 from keras.layers import LSTM, Dense, Embedding
-
-from keras.datasets import imdb
-
 from keras.metrics import BinaryAccuracy, Recall, Precision, F1Score
+import tensorflow as tf
 
 WINDOW_SIZE = 0
 N_NEIGHBORS = 3
@@ -377,18 +367,10 @@ def isolation_forest(base_normal, base_exec):
     return
 
 
-# def sliding_window(sequence, window_size):
-#     i = 0
-#     windows = []
-#     while i + window_size <= len(sequence):
-#         windows.append(sequence[i:i+window_size])
-#         i += 1
-#     return np.array(windows)
-
-
 def lstm(base_normal, base_exec):
     print("\n> LSTM")
     print("[...] Retrieving datasets and labels")
+    tf.random.set_seed(7)
     labels = define_labels(base_normal, base_exec, False)
     features = base_normal + base_exec
     x_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.5, random_state=2)
