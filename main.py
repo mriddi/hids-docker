@@ -380,7 +380,7 @@ def lstm(base_normal, base_exec):
     model.add(Embedding(input_dim=VOCAB_SIZE, output_dim=8, input_length=WINDOW_SIZE))
     model.add(LSTM(50))
     model.add(Dense(1, activation='sigmoid'))
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[BinaryAccuracy(), Recall(), Precision(), F1Score()])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[BinaryAccuracy(), Recall(), Precision()])
     model.summary()
     model.fit(x_train, y_train, epochs=2, batch_size=32, verbose=2)
 
@@ -388,7 +388,7 @@ def lstm(base_normal, base_exec):
 
     print(f"Precision: {score[3]:.4f}")
     print(f"Recall: {score[2]:.4f}")
-    print(f"F1 Score: {score[4]:.4f}")
+    # print(f"F1 Score: {score[4]:.4f}")
     print(f"Accuracy: {score[1]:.4f}")
 
     predictions = model.predict(X_test)
