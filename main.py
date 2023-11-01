@@ -34,6 +34,8 @@ from keras.layers import LSTM, Dense, Embedding
 
 from keras.datasets import imdb
 
+from keras.metrics import BinaryAccuracy, Recall, Precision, F1Score
+
 WINDOW_SIZE = 0
 N_NEIGHBORS = 3
 
@@ -396,9 +398,16 @@ def lstm(base_normal, base_exec):
     model.add(Embedding(input_dim=VOCAB_SIZE, output_dim=8, input_length=WINDOW_SIZE))
     model.add(LSTM(50))
     model.add(Dense(1, activation='sigmoid'))
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[BinaryAccuracy(), Recall(), Precision(), F1Score()])
     model.summary()
     model.fit(x_train, y_train, epochs=2, batch_size=32, verbose=2)
+
+    score = model.evaluate(X_test, y_test, verbose=0)
+
+    print(f"Precision: {score[3]:.4f}")
+    print(f"Recall: {score[2]:.4f}")
+    print(f"F1 Score: {score[4]:.4f}")
+    print(f"Accuracy: {score[1]:.4f}")
 
     predictions = model.predict(X_test)
 
@@ -408,18 +417,6 @@ def lstm(base_normal, base_exec):
         print("The sequence is normal.")
     else:
         print("The sequence is abnormal.")
-
-    predicted_labels = (predictions > 0.5).astype(int)
-
-    precision = precision_score(y_test, predicted_labels, average='micro')
-    recall = recall_score(y_test, predicted_labels, average='micro')
-    f1 = f1_score(y_test, predicted_labels, average='micro')
-    accuracy = accuracy_score(y_test, predicted_labels)
-
-    print(f"Precision: {precision:.4f}")
-    print(f"Recall: {recall:.4f}")
-    print(f"F1 Score: {f1:.4f}")
-    print(f"Accuracy: {accuracy:.4f}")
 
     return
 
@@ -440,12 +437,11 @@ if __name__ == "__main__":
 
     base_normal, base_exec = get_features(args.dataset, args.filter)
 
-    # lstm(base_normal, base_exec)
-    naive_bayes(base_normal, base_exec)
+    lstm(base_normal, base_exec)
+    # naive_bayes(base_normal, base_exec)
     # kneighbors(base_normal, base_exec)
     # random_forest(base_normal, base_exec)
     # multilayer_perceptron(base_normal, base_exec)
     # ada_boost(base_normal, base_exec)
-
     # one_class_svm(base_normal, base_exec)
     # isolation_forest(base_normal, base_exec)
